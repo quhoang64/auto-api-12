@@ -7,6 +7,7 @@ import io.restassured.RestAssured;
 import io.restassured.common.mapper.TypeRef;
 import io.restassured.response.Response;
 import model.Country;
+import model.CountryPagination;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeAll;
@@ -149,6 +150,71 @@ public class CountryTests {
         for(Country country : actual){
             assertThat(country.getGdp(), expected);
         }
+    }
+
+    @Test
+    void verifySchemaGetCountriesWithPagination(){
+        RestAssured.given().log().all()
+                .queryParam("page",1)
+                .queryParam("size",4)
+                .get("api/v4/countries")
+                .then()
+                .log().all()
+                .statusCode(200)
+                .assertThat().body(matchesJsonSchemaInClasspath("json-schema/countries-pagination-schema.json"));
+    }
+
+    @Test
+    void verifyGetCountriesWithPagination(){
+        int testSize = 4;
+        Response response = getCountryApiPagagination(1, testSize);
+
+        // 1. Verify status code
+        response.then().log().all().statusCode(200);
+
+        // 2. Verify header
+        response.then().header("X-Powered-By", equalTo("Express"))
+                .header("Content-Type", equalTo("application/json; charset=utf-8"));
+        // 3. verify body
+        CountryPagination actualDataFirstPage = response.body().as(CountryPagination.class);
+        verifyPage(actualDataFirstPage, 1, testSize, testSize);
+
+        //4. second Page
+        response = getCountryApiPagagination(2, testSize);
+
+        CountryPagination actualDataSecondPage = response.body().as(CountryPagination.class);
+        verifyPage(actualDataSecondPage, 2, testSize, testSize);
+        //5. verify 2 page
+        assertThat(actualDataFirstPage.getData().containsAll(actualDataSecondPage.getData()),equalTo(false));
+        assertThat(actualDataSecondPage.getData().containsAll(actualDataFirstPage.getData()),equalTo(false));
+
+        //6. verify last page
+        int lastPage = actualDataFirstPage.getTotal()/ testSize;
+        int sizeOfLastPage = actualDataSecondPage.getTotal() % testSize;
+        if(sizeOfLastPage != 0){
+            lastPage++;
+        }else {
+            sizeOfLastPage = 4;
+        }
+
+        response = getCountryApiPagagination(lastPage, testSize);
+
+        CountryPagination actualDataLastPage = response.body().as(CountryPagination.class);
+        verifyPage(actualDataLastPage, lastPage, testSize, sizeOfLastPage);
+    }
+
+    private static void verifyPage(CountryPagination pageData, int expectedPage, int expectedSize, int expectedLength) {
+        assertThat(pageData.getPage(),equalTo(expectedPage));
+        assertThat(pageData.getSize(),equalTo(expectedSize));
+        assertThat(pageData.getData(),hasSize(expectedLength));
+    }
+
+    private static Response getCountryApiPagagination(int page, int size) {
+        return RestAssured.given().log().all()
+                .queryParam("page",page)
+                .queryParam("size", size)
+                .get("api/v4/countries");
+
     }
 
 }
