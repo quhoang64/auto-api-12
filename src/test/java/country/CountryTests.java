@@ -7,9 +7,12 @@ import io.restassured.RestAssured;
 import io.restassured.common.mapper.TypeRef;
 import io.restassured.response.Response;
 import model.Country;
+import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -114,11 +117,22 @@ public class CountryTests {
                 .assertThat().body(matchesJsonSchemaInClasspath("json-schema/countries-filter-schema.json"));
     }
 
-    @Test
-    void verifyCountryApiWithFilterGreaterThan(){
+    static Stream<Arguments> getCountryWithFilterProvider(){
+        return Stream.of(
+                Arguments.of(">", 5000, greaterThan(5000f)),
+                Arguments.of("<", 5000, lessThan(5000f)),
+                Arguments.of("<=", 5000, lessThanOrEqualTo(5000f)),
+                Arguments.of(">=", 5000, greaterThanOrEqualTo(5000f)),
+                Arguments.of("==", 5000, equalTo(5000f))
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("getCountryWithFilterProvider")
+    void verifyCountryApiWithFilterGreaterThan(String operator, int gdp, Matcher expected){
         Response response = RestAssured.given().log().all()
-                .queryParam("gdp",5000)
-                .queryParam("operator", ">")
+                .queryParam("gdp",gdp)
+                .queryParam("operator", operator)
                 .get("api/v3/countries");
 
         // 1. Verify status code
@@ -133,7 +147,8 @@ public class CountryTests {
         });
 
         for(Country country : actual){
-            assertThat(country.getGdp(), greaterThan(5000f));
+            assertThat(country.getGdp(), expected);
         }
     }
+
 }
