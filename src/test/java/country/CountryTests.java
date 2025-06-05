@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.RestAssured;
 import io.restassured.common.mapper.TypeRef;
 import io.restassured.response.Response;
+import model.Country;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -21,6 +22,7 @@ import java.util.stream.Stream;
 import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInClasspath;
 
 public class CountryTests {
+    private static final String API_GET_COUNTRIES = "/api/v1/countries";
 
     @BeforeAll
     static void setUp(){
@@ -31,7 +33,7 @@ public class CountryTests {
     @Test
     void verifySchemaGetCountries(){
         RestAssured.given().log().all()
-                .get("/api/v1/countries")
+                .get(API_GET_COUNTRIES)
                 .then()
                 .log().all()
                 .statusCode(200)
@@ -41,7 +43,7 @@ public class CountryTests {
     @Test
     void verifyGetCountriesData() throws JsonProcessingException {
         Response response = RestAssured.given().log().all()
-                .get("/api/v1/countries");
+                .get(API_GET_COUNTRIES);
 
         // 1. Verify status code
         response.then().log().all().statusCode(200);
@@ -52,11 +54,12 @@ public class CountryTests {
 
         // 3. Verify Body
         ObjectMapper mapper = new ObjectMapper();
-        List<Map<String, String>> expected = mapper.readValue(CountriesData.ALL_COUNTRIES_DATA,new TypeReference<List<Map<String, String>>>(){
+        List<Country> expected = mapper.readValue(CountriesData.ALL_COUNTRIES_DATA,new TypeReference<>(){
         });
 
-        List<Map<String, String>> actual = response.body().as(new TypeRef<List<Map<String, String>>>() {
+        List<Country> actual = response.body().as(new TypeRef<>() {
         });
+
         assertThat(actual.size(), equalTo(expected.size()));
         assertThat(actual.containsAll(expected), equalTo(true) );
         assertThat(expected.containsAll(actual), equalTo(true) );
@@ -65,16 +68,16 @@ public class CountryTests {
     @Test
     void verifySchemaGetCountry(){
         RestAssured.given().log().all()
-                .get("/api/v1/countries/VN")
+                .get(API_GET_COUNTRIES ,"VN")
                 .then()
                 .log().all()
                 .statusCode(200)
                 .assertThat().body(matchesJsonSchemaInClasspath("json-schema/country-schema.json"));
     }
 
-    static Stream<Map<String, String>> countryProvider() throws JsonProcessingException {
+    static Stream<Country> countryProvider() throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
-        List<Map<String, String>> inputData = mapper.readValue(CountriesData.ALL_COUNTRIES_DATA,new TypeReference<List<Map<String, String>>>(){
+        List<Country> inputData = mapper.readValue(CountriesData.ALL_COUNTRIES_DATA,new TypeReference<>(){
         });
         return inputData.stream();
     }
@@ -82,9 +85,9 @@ public class CountryTests {
 
     @ParameterizedTest
     @MethodSource("countryProvider")
-    void verifyGetCountry(Map<String, String> input){
+    void verifyGetCountry(Country input){
         Response response = RestAssured.given().log().all()
-                .get("/api/v1/countries/{code}", input.get("code"));
+                .get("/api/v1/countries/{code}", input.getCode());
 
         // 1. Verify status code
         response.then().log().all().statusCode(200);
@@ -94,10 +97,43 @@ public class CountryTests {
                 .header("Content-Type", equalTo("application/json; charset=utf-8"));
         // 3. verify body
 
-        Map<String, String> actualData = response.body().as(new TypeRef<Map<String, String>>() {
-        });
+        Country actualData = response.body().as(Country.class);
         assertThat(actualData,equalToObject(input));
 
     }
 
+    @Test
+    void verifySchemaGetCountriesWithFilter(){
+        RestAssured.given().log().all()
+                .queryParam("gdp",5000)
+                .queryParam("operator", ">")
+                .get("api/v3/countries")
+                .then()
+                .log().all()
+                .statusCode(200)
+                .assertThat().body(matchesJsonSchemaInClasspath("json-schema/countries-filter-schema.json"));
+    }
+
+    @Test
+    void verifyCountryApiWithFilterGreaterThan(){
+        Response response = RestAssured.given().log().all()
+                .queryParam("gdp",5000)
+                .queryParam("operator", ">")
+                .get("api/v3/countries");
+
+        // 1. Verify status code
+        response.then().log().all().statusCode(200);
+
+        // 2. Verify header
+        response.then().header("X-Powered-By", equalTo("Express"))
+                .header("Content-Type", equalTo("application/json; charset=utf-8"));
+        // 3. verify body
+
+        List<Country> actual = response.body().as(new TypeRef<>() {
+        });
+
+        for(Country country : actual){
+            assertThat(country.getGdp(), greaterThan(5000f));
+        }
+    }
 }
