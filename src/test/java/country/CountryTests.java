@@ -22,14 +22,16 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInClasspath;
+import static utils.ConstantUtils.HOST;
+import static utils.ConstantUtils.PORT;
 
 public class CountryTests {
     private static final String API_GET_COUNTRIES = "/api/v1/countries";
 
     @BeforeAll
     static void setUp(){
-        RestAssured.baseURI = "http://localhost";
-        RestAssured.port = 3000;
+        RestAssured.baseURI = HOST;
+        RestAssured.port = PORT;
     }
 
     @Test
