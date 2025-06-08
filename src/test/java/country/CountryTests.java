@@ -190,7 +190,7 @@ public class CountryTests {
 
         //6. verify last page
         int lastPage = actualDataFirstPage.getTotal()/ testSize;
-        int sizeOfLastPage = actualDataSecondPage.getTotal() % testSize;
+        int sizeOfLastPage = actualDataFirstPage.getTotal() % testSize;
         if(sizeOfLastPage != 0){
             lastPage++;
         }else {
@@ -215,6 +215,17 @@ public class CountryTests {
                 .queryParam("size", size)
                 .get("api/v4/countries");
 
+    }
+
+    @Test
+    void verifySchemaGetCountriesWithHeader(){
+        RestAssured.given().log().all()
+                .header("api-key", "private")
+                .get("api/v5/countries")
+                .then()
+                .log().all()
+                .statusCode(200)
+                .assertThat().body(matchesJsonSchemaInClasspath("json-schema/countries-private-schema.json"));
     }
 
 }
