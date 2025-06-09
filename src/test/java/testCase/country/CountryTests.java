@@ -1,4 +1,4 @@
-package country;
+package testCase.country;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -9,11 +9,11 @@ import io.restassured.response.Response;
 import model.country.Country;
 import model.country.CountryPagination;
 import org.hamcrest.Matcher;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import testCase.TestMaster;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -22,17 +22,11 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInClasspath;
-import static utils.ConstantUtils.HOST;
-import static utils.ConstantUtils.PORT;
 
-public class CountryTests {
+public class CountryTests extends TestMaster {
     private static final String API_GET_COUNTRIES = "/api/v1/countries";
+    private static final String API_GET_COUNTRY = "/api/v1/countries/{code}";
 
-    @BeforeAll
-    static void setUp(){
-        RestAssured.baseURI = HOST;
-        RestAssured.port = PORT;
-    }
 
     @Test
     void verifySchemaGetCountries(){
@@ -72,7 +66,7 @@ public class CountryTests {
     @Test
     void verifySchemaGetCountry(){
         RestAssured.given().log().all()
-                .get(API_GET_COUNTRIES ,"VN")
+                .get(API_GET_COUNTRY ,"VN")
                 .then()
                 .log().all()
                 .statusCode(200)
@@ -89,9 +83,9 @@ public class CountryTests {
 
     @ParameterizedTest
     @MethodSource("countryProvider")
-    void verifyGetCountry(Country input){
+    void verifyGetCountry(Country country){
         Response response = RestAssured.given().log().all()
-                .get("/api/v1/countries/{code}", input.getCode());
+                .get("/api/v1/countries/{code}", country.getCode());
 
         // 1. Verify status code
         response.then().log().all().statusCode(200);
@@ -102,7 +96,7 @@ public class CountryTests {
         // 3. verify body
 
         Country actualData = response.body().as(Country.class);
-        assertThat(actualData,equalToObject(input));
+        assertThat(actualData,equalToObject(country));
 
     }
 
@@ -142,11 +136,10 @@ public class CountryTests {
         // 2. Verify header
         response.then().header("X-Powered-By", equalTo("Express"))
                 .header("Content-Type", equalTo("application/json; charset=utf-8"));
-        // 3. verify body
 
+        // 3. verify body
         List<Country> actual = response.body().as(new TypeRef<>() {
         });
-
         for(Country country : actual){
             assertThat(country.getGdp(), expected);
         }

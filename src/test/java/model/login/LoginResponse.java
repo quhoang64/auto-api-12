@@ -1,14 +1,18 @@
 package model.login;
 
-import java.util.Objects;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+import java.util.Objects;
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class LoginResponse {
     private String token;
     private int timeout;
-
-    public LoginResponse(){
-
-    }
 
     @Override
     public boolean equals(Object o) {
@@ -22,21 +26,6 @@ public class LoginResponse {
         return Objects.hash(token, timeout);
     }
 
-    public int getTimeout() {
-        return timeout;
-    }
-
-    public void setTimeout(int timeout) {
-        this.timeout = timeout;
-    }
-
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
-    }
 
 
 
