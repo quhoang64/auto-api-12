@@ -143,6 +143,7 @@ public class CountryTests extends TestMaster {
         for(Country country : actual){
             assertThat(country.getGdp(), expected);
         }
+
     }
 
     @Test
