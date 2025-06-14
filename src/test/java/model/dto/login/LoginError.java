@@ -1,4 +1,4 @@
-package model.login;
+package model.dto.login;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,16 +9,13 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoginRequest {
-    private String username;
-    private String password;
-
+public class LoginError {
+    private String message;
 
     @Override
     public String toString() {
-        return "LoginRequest{" +
-                "username='" + username + '\'' +
-                ", password='" + password + '\'' +
+        return "LoginError{" +
+                "message='" + message + '\'' +
                 '}';
     }
 }
