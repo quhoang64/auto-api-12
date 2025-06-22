@@ -48,7 +48,7 @@ public class CreateUserTest extends TestMaster {
         UserAddressRequest userAddressRequest = UserAddressRequest.getDefault();
         // Create User
         UserRequest userRequest = UserRequest.getDefault();
-        userRequest.setEmail(String.format("demoapi_%s@gmail.com", System.currentTimeMillis()));
+        userRequest.setEmail(String.format(EMAIL_TEMPLATE, System.currentTimeMillis()));
         userRequest.setAddresses(List.of(userAddressRequest));
 
         LocalDateTime timeBeforeCreate = LocalDateTime.now();
@@ -152,7 +152,7 @@ public class CreateUserTest extends TestMaster {
                 .get(GET_USER_API, userResponse.getId());
     }
 
-    private static Response createUser(UserRequest userRequest) {
+    public static Response createUser(UserRequest userRequest) {
         return RestAssured.given().log().all()
                 .header(CONTENT_TYPE_HEADER, REQUEST_CONTENT_TYPE_HEADER_VALUE)
                 .header(AUTHORIZATION_HEADER, token)

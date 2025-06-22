@@ -7,6 +7,7 @@ public class ConstantUtils {
     public static final String CREATE_USER_API = "api/user";
     public static final String GET_USER_API = "api/user/{userId}";
     public static final String DELETE_USER_API = "api/user/{userId}";
+    public static final String CREATE_CARD_API = "api/card";
 
 
     public static final String AUTHORIZATION_HEADER = "Authorization";
@@ -16,4 +17,5 @@ public class ConstantUtils {
     public static final String CONTENT_TYPE_HEADER_VALUE = "application/json; charset=utf-8";
     public static final String REQUEST_CONTENT_TYPE_HEADER = "Content-Type";
     public static final String REQUEST_CONTENT_TYPE_HEADER_VALUE = "application/json";
+    public static final String EMAIL_TEMPLATE = "demoapi_%s@gmail.com";
 }
